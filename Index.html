@@ -7,7 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-/* === GRAFICA ORIGINALE NON TOCCATA === */
 :root { --primary:#5a67d8;--secondary:#764ba2;--bg:#f4f7f6;--success:#48bb78;--danger:#e53e3e; }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:var(--bg);color:#2d3748}
@@ -74,12 +73,14 @@ input,select{width:100%;padding:12px;margin-bottom:15px;border:1px solid #e2e8f0
 <div id="tab-adm" class="card hidden">
 
 <h3>➕ Aggiungi Libro</h3>
-<input id="new-id" placeholder="ID">
+<input id="new-id" placeholder="ID / Codice">
 <input id="new-title" placeholder="Titolo">
 <input id="new-auth" placeholder="Autore">
 <button class="btn btn-success" onclick="addBook()">Salva Libro</button>
 
-<button class="btn" style="margin-top:10px" onclick="exportBooks()">📤 Esporta Libri</button>
+<input type="file" id="book-file" accept=".xlsx,.xls">
+<button class="btn" onclick="importBooks()">📥 Importa Libri da Excel</button>
+<button class="btn" onclick="exportBooks()">📤 Esporta Libri</button>
 
 <h3 style="margin-top:25px">👶 Aggiungi Bambino</h3>
 <div style="display:flex;gap:5px">
@@ -118,22 +119,25 @@ refreshUI();
 
 /* ===== BAMBINI ===== */
 function addKid(){
-const n=document.getElementById("new-kid").value.trim();
-if(n&&!db_kids.includes(n)){db_kids.push(n);document.getElementById("new-kid").value="";sync();}
+const n=newKid.value.trim();
+if(n&&!db_kids.includes(n)){db_kids.push(n);newKid.value="";sync();}
 }
 
 function deleteKid(name){
-if(db_books.some(b=>b.loaned&&b.kid===name)){alert("Ha libri in prestito");return;}
+if(db_books.some(b=>b.loaned&&b.kid===name)){alert("Bambino con libri in prestito");return;}
 db_kids=db_kids.filter(k=>k!==name);sync();
 }
 
 function importKids(){
-const f=document.getElementById("kid-file").files[0];if(!f)return;
+const f=kidFile.files[0];if(!f)return;
 const r=new FileReader();
 r.onload=e=>{
 const wb=XLSX.read(e.target.result,{type:"array"});
 const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-data.forEach(r=>{const n=r.Nome||r.Name;if(n&&!db_kids.includes(n))db_kids.push(n);});
+data.forEach(r=>{
+const n=r.Nome||r.Name;
+if(n&&!db_kids.includes(n))db_kids.push(n);
+});
 sync();
 };
 r.readAsArrayBuffer(f);
@@ -148,11 +152,38 @@ XLSX.writeFile(wb,"bambini.xlsx");
 
 /* ===== LIBRI ===== */
 function addBook(){
-const t=document.getElementById("new-title").value.trim();
+const t=newTitle.value.trim();
 if(!t)return;
-db_books.push({id:document.getElementById("new-id").value||Date.now(),title:t,author:document.getElementById("new-auth").value||"",loaned:false,kid:"",date:""});
-document.getElementById("new-id").value=document.getElementById("new-title").value=document.getElementById("new-auth").value="";
+db_books.push({
+id:newId.value||Date.now().toString(),
+title:t,
+author:newAuth.value||"",
+loaned:false,kid:"",date:""
+});
+newId.value=newTitle.value=newAuth.value="";
 sync();
+}
+
+function importBooks(){
+const f=bookFile.files[0];if(!f)return;
+const r=new FileReader();
+r.onload=e=>{
+const wb=XLSX.read(e.target.result,{type:"array"});
+const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+data.forEach(r=>{
+const id=String(r.ID||r.ISBN||r.Barcode||Date.now()+Math.random());
+if(!db_books.find(b=>b.id===id)){
+db_books.push({
+id:id,
+title:r.Titolo||r.Title||"Senza titolo",
+author:r.Autore||r.Author||"",
+loaned:false,kid:"",date:""
+});
+}
+});
+sync();
+};
+r.readAsArrayBuffer(f);
 }
 
 function exportBooks(){
