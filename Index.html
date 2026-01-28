@@ -3,219 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestione Biblioteca Infanzia</title>
+    <title>BiblioScuola PRO</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --p: #4f46e5; --s: #10b981; --d: #ef4444; --bg: #f8fafc; }
-        * { box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; }
-        .header { background: var(--p); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; }
-        .container { max-width: 500px; margin: auto; padding: 10px; }
+        :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 20px; }
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
         
-        /* Navigazione */
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .tab-btn { flex: 1; border: none; padding: 12px 5px; background: none; cursor: pointer; border-radius: 8px; font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .tab-btn.active { background: var(--p); color: white; }
+        .stats { display: flex; gap: 10px; margin-top: -15px; margin-bottom: 20px; }
+        .stat-card { flex: 1; background: white; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .stat-num { display: block; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+        .stat-label { font-size: 0.6rem; color: #718096; text-transform: uppercase; }
 
-        /* Card */
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h3 { margin: 0 0 15px 0; font-size: 1rem; color: var(--p); border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .nav { display: flex; background: white; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: bold; color: #718096; font-size: 0.75rem; border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8faff; }
+
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { margin-bottom: 15px; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; color: #4a5568; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; -webkit-appearance: none; background: #fff; }
         
-        /* Form */
-        label { display: block; font-size: 0.8rem; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; color: white; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.7; }
-        .btn-p { background: var(--p); }
-        .btn-s { background: var(--s); }
-        .btn-d { background: #f1f5f9; color: #64748b; font-size: 0.8rem; }
-
-        /* Liste */
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; }
-        .item:last-child { border: none; }
-        .item-info h4 { margin: 0; font-size: 0.9rem; }
-        .item-info p { margin: 2px 0 0 0; font-size: 0.75rem; color: #64748b; }
-        .badge { font-size: 0.7rem; padding: 3px 7px; border-radius: 5px; font-weight: bold; }
-        .badge-ok { background: #dcfce7; color: #166534; }
-        .badge-out { background: #fee2e2; color: #991b1b; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        .btn-success { background: var(--success); }
+        .btn-res { width: auto; padding: 8px 15px; font-size: 0.8rem; background: var(--success); }
         .hidden { display: none; }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+        .info h4 { font-size: 0.9rem; color: #2d3748; }
+        .info p { font-size: 0.75rem; color: #718096; }
+        .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .bg-ok { background: #c6f6d5; color: #22543d; }
+        .bg-out { background: #feebc8; color: #744210; }
+        .tag { display: inline-block; background: #edf2f7; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; margin: 2px; }
     </style>
 </head>
 <body>
 
-<div class="header">📚 La Mia Biblioteca</div>
+<div class="header">
+    <h1>📚 BiblioScuola</h1>
+</div>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('pre')">PRESTITO</button>
-        <button class="tab-btn" onclick="showTab('res')">RESI</button>
-        <button class="tab-btn" onclick="showTab('cat')">CATALOGO</button>
-        <button class="tab-btn" onclick="showTab('adm')">GESTIONE</button>
+    <div class="stats">
+        <div class="stat-card"><span class="stat-num" id="s-tot">0</span><span class="stat-label">Libri</span></div>
+        <div class="stat-card"><span class="stat-num" id="s-pre">0</span><span class="stat-label">Fuori</span></div>
+        <div class="stat-card"><span class="stat-num" id="s-kids">0</span><span class="stat-label">Bambini</span></div>
     </div>
 
-    <div id="t-pre" class="card">
-        <h3>Nuovo Prestito</h3>
-        <label>Bambino</label>
-        <select id="loan-kid"><option value="">Carica i nomi in Gestione...</option></select>
-        <label>Libro (Scansiona o scrivi Titolo)</label>
-        <input type="text" id="loan-book" placeholder="Cerca libro...">
-        <button class="btn btn-p" onclick="handleLoan()">REGISTRA PRESTITO</button>
+    <div class="nav">
+        <button class="nav-btn active" id="n-pre" onclick="showTab('pre')">PRESTITO</button>
+        <button class="nav-btn" id="n-res" onclick="showTab('res')">RESI</button>
+        <button class="nav-btn" id="n-cat" onclick="showTab('cat')">CATALOGO</button>
+        <button class="nav-btn" id="n-adm" onclick="showTab('adm')">GESTIONE</button>
     </div>
 
-    <div id="t-res" class="card hidden">
+    <div id="tab-pre" class="card">
+        <h3>Registra Uscita</h3>
+        <label>👦 Seleziona Bambino</label>
+        <select id="sel-kid"></select>
+        
+        <label>📖 Seleziona Libro Disponibile</label>
+        <select id="sel-book"></select>
+        
+        <button class="btn" onclick="executeBorrow()">Conferma Prestito</button>
+    </div>
+
+    <div id="tab-res" class="card hidden">
         <h3>Libri da Rientrare</h3>
         <div id="list-res"></div>
     </div>
 
-    <div id="t-cat" class="card hidden">
-        <input type="text" id="search-cat" placeholder="Cerca nel catalogo..." onkeyup="refreshUI()">
-        <div id="list-cat" style="margin-top:10px"></div>
+    <div id="tab-cat" class="card hidden">
+        <input type="text" id="search-cat" placeholder="🔍 Cerca nel catalogo..." onkeyup="refreshUI()">
+        <div id="list-cat"></div>
     </div>
 
-    <div id="t-adm" class="card hidden">
-        <h3>Aggiungi Libro</h3>
-        <input type="text" id="add-id" placeholder="Codice/ISBN (opzionale)">
-        <input type="text" id="add-title" placeholder="Titolo del libro">
-        <button class="btn btn-s" onclick="addBook()">AGGIUNGI LIBRO</button>
+    <div id="tab-adm" class="card hidden">
+        <h3>➕ Aggiungi Libro</h3>
+        <input type="text" id="new-id" placeholder="ID/Codice">
+        <input type="text" id="new-title" placeholder="Titolo">
+        <input type="text" id="new-auth" placeholder="Autore">
+        <button class="btn btn-success" onclick="addManualBook()">Salva Libro</button>
 
-        <h3 style="margin-top:20px">Aggiungi Bambino</h3>
+        <h3 style="margin-top:20px">👶 Aggiungi Bambino</h3>
         <div style="display:flex; gap:5px">
-            <input type="text" id="add-kid" placeholder="Nome bambino" style="margin:0">
-            <button class="btn btn-p" style="width:70px" onclick="addKid()">OK</button>
+            <input type="text" id="new-kid" placeholder="Nome Bambino" style="margin:0">
+            <button class="btn" style="width:70px" onclick="addManualKid()">OK</button>
         </div>
+        <div id="kids-display" style="margin-top:10px"></div>
 
-        <h3 style="margin-top:20px">Importa Excel</h3>
-        <input type="file" id="file-excel" accept=".xlsx, .xls">
-        <button class="btn btn-d" onclick="importExcel()">CARICA FILE EXCEL</button>
-
-        <button class="btn btn-d" style="margin-top:30px; color:red" onclick="clearData()">RESET TOTALE</button>
+        <h3 style="margin-top:20px">📊 Importa Excel</h3>
+        <input type="file" id="excel-input" accept=".xlsx, .xls">
+        <button class="btn" style="background:#4a5568" onclick="handleExcel()">Carica File</button>
+        
+        <button class="btn" style="margin-top:40px; background:var(--danger)" onclick="clearDB()">Svuota Tutto</button>
     </div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('biblio_db')) || { books: [], kids: [] };
+    let db_books = JSON.parse(localStorage.getItem('lib_books')) || [];
+    let db_kids = JSON.parse(localStorage.getItem('lib_kids')) || [];
 
-    function save() {
-        localStorage.setItem('biblio_db', JSON.stringify(db));
+    function sync() {
+        localStorage.setItem('lib_books', JSON.stringify(db_books));
+        localStorage.setItem('lib_kids', JSON.stringify(db_kids));
         refreshUI();
     }
 
     function showTab(t) {
-        document.querySelectorAll('[id^="t-"]').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById('t-' + t).classList.remove('hidden');
-        event.currentTarget.classList.add('active');
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + t).classList.remove('hidden');
+        document.getElementById('n-' + t).classList.add('active');
         refreshUI();
     }
 
-    function addKid() {
-        const name = document.getElementById('add-kid').value.trim();
-        if(name) {
-            db.kids.push(name);
-            document.getElementById('add-kid').value = '';
-            save();
+    function addManualBook() {
+        const t = document.getElementById('new-title').value;
+        if(!t) return alert("Inserisci il titolo");
+        db_books.push({
+            id: document.getElementById('new-id').value || Date.now().toString(),
+            title: t,
+            author: document.getElementById('new-auth').value || "N.D.",
+            loaned: false,
+            kid: "",
+            date: ""
+        });
+        document.getElementById('new-id').value = ''; document.getElementById('new-title').value = '';
+        sync();
+    }
+
+    function addManualKid() {
+        const n = document.getElementById('new-kid').value;
+        if(n) { db_kids.push(n); document.getElementById('new-kid').value = ''; sync(); }
+    }
+
+    function executeBorrow() {
+        const kid = document.getElementById('sel-kid').value;
+        const bookId = document.getElementById('sel-book').value;
+        if(!kid || !bookId) return alert("Seleziona bambino e libro!");
+
+        const b = db_books.find(x => x.id === bookId);
+        if(b) {
+            b.loaned = true;
+            b.kid = kid;
+            b.date = new Date().toLocaleDateString('it-IT');
+            sync();
+            alert("Prestito registrato!");
         }
     }
 
-    function addBook() {
-        const title = document.getElementById('add-title').value.trim();
-        const code = document.getElementById('add-id').value.trim() || 'MAN-' + Date.now();
-        if(!title) return alert("Inserisci il titolo");
-        db.books.push({ id: code, title: title, status: 'disponibile', kid: '', date: '' });
-        document.getElementById('add-title').value = '';
-        document.getElementById('add-id').value = '';
-        save();
-        alert("Libro salvato!");
+    function executeReturn(id) {
+        const b = db_books.find(x => x.id === id);
+        if(b) {
+            b.loaned = false;
+            b.kid = "";
+            b.date = "";
+            sync();
+        }
     }
 
-    function importExcel() {
-        const file = document.getElementById('file-excel').files[0];
-        if(!file) return alert("Scegli un file");
+    function handleExcel() {
+        const file = document.getElementById('excel-input').files[0];
+        if(!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, {type: 'array'});
             const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             raw.forEach(r => {
-                const t = r.Title || r.Titolo || r.title || "Senza Titolo";
-                const i = r.ISBN || r.Barcode || r.ID || 'EX-' + Math.random();
-                db.books.push({ id: String(i), title: t, status: 'disponibile', kid: '', date: '' });
+                const id = String(r.ISBN || r.Barcode || r.ID || Math.random());
+                if(!db_books.find(x => x.id === id)) {
+                    db_books.push({
+                        id: id,
+                        title: r.Titolo || r.Title || "Senza Titolo",
+                        author: r.Autore || r.Author || "",
+                        loaned: false, kid: "", date: ""
+                    });
+                }
             });
-            save();
-            alert("Importati " + raw.length + " libri!");
+            sync();
+            alert("Importati!");
         };
         reader.readAsArrayBuffer(file);
     }
 
-    function handleLoan() {
-        const kid = document.getElementById('loan-kid').value;
-        const search = document.getElementById('loan-book').value.toLowerCase().trim();
-        if(!kid || !search) return alert("Seleziona bambino e cerca libro");
-
-        const book = db.books.find(b => b.status === 'disponibile' && 
-            (b.title.toLowerCase().includes(search) || b.id.toLowerCase() === search));
-
-        if(book) {
-            book.status = 'prestito';
-            book.kid = kid;
-            book.date = new Date().toLocaleDateString('it-IT');
-            document.getElementById('loan-book').value = '';
-            save();
-            alert("Prestito registrato!");
-        } else {
-            alert("Libro non trovato o già in prestito");
-        }
-    }
-
-    function handleReturn(bookId) {
-        // Cerchiamo il libro esatto per ID
-        const book = db.books.find(b => b.id === bookId);
-        if(book) {
-            book.status = 'disponibile';
-            book.kid = '';
-            book.date = '';
-            save(); // Salva e aggiorna i tab
-        }
-    }
-
     function refreshUI() {
-        // Aggiorna Select Bambini
-        const sel = document.getElementById('loan-kid');
-        const current = sel.value;
-        sel.innerHTML = '<option value="">-- Chi prende il libro? --</option>' + 
-            db.kids.sort().map(k => `<option value="${k}" ${k==current?'selected':''}>${k}</option>`).join('');
+        // Stats
+        document.getElementById('s-tot').innerText = db_books.length;
+        document.getElementById('s-pre').innerText = db_books.filter(x => x.loaned).length;
+        document.getElementById('s-kids').innerText = db_kids.length;
 
-        // Aggiorna Lista Resi
-        const resDiv = document.getElementById('list-res');
-        const inLoan = db.books.filter(b => b.status === 'prestito');
-        resDiv.innerHTML = inLoan.map(b => `
-            <div class="item">
-                <div class="item-info"><h4>${b.title}</h4><p>A: ${b.kid} (${b.date})</p></div>
-                <button class="btn btn-s" style="width:auto; padding:5px 10px" onclick="handleReturn('${b.id}')">RESO</button>
+        // Select Bambini
+        const sKid = document.getElementById('sel-kid');
+        sKid.innerHTML = '<option value="">-- Seleziona Bambino --</option>' + 
+            db_kids.sort().map(k => `<option value="${k}">${k}</option>`).join('');
+
+        // Select Libri Disponibili
+        const sBook = document.getElementById('sel-book');
+        const avail = db_books.filter(x => !x.loaned);
+        sBook.innerHTML = '<option value="">-- Seleziona Libro --</option>' + 
+            avail.sort((a,b) => a.title.localeCompare(b.title))
+                 .map(b => `<option value="${b.id}">${b.title}</option>`).join('');
+
+        // Lista Resi
+        const resContainer = document.getElementById('list-res');
+        const loanedBooks = db_books.filter(x => x.loaned);
+        resContainer.innerHTML = loanedBooks.map(b => `
+            <div class="list-item">
+                <div class="info"><h4>${b.title}</h4><p>A: ${b.kid} (${b.date})</p></div>
+                <button class="btn btn-res" onclick="executeReturn('${b.id}')">RESO</button>
             </div>
-        `).join('') || '<p style="text-align:center;color:#999">Tutti i libri sono in sede.</p>';
+        `).join('') || '<p style="text-align:center;color:#999;padding:20px">Nessun libro fuori</p>';
 
-        // Aggiorna Catalogo
+        // Catalogo
         const query = document.getElementById('search-cat').value.toLowerCase();
-        const catDiv = document.getElementById('list-cat');
-        catDiv.innerHTML = db.books
-            .filter(b => b.title.toLowerCase().includes(query) || b.id.toLowerCase().includes(query))
-            .map(b => `
-            <div class="item">
-                <div class="item-info"><h4>${b.title}</h4><p>ID: ${b.id}</p></div>
-                <span class="badge ${b.status=='disponibile'?'badge-ok':'badge-out'}">
-                    ${b.status=='disponibile'?'Disponibile':'In Prestito'}
-                </span>
+        const catContainer = document.getElementById('list-cat');
+        catContainer.innerHTML = db_books.filter(x => x.title.toLowerCase().includes(query)).map(b => `
+            <div class="list-item">
+                <div class="info"><h4>${b.title}</h4><p>${b.author}</p></div>
+                <span class="badge ${b.loaned?'bg-out':'bg-ok'}">${b.loaned?'Fuori':'Libero'}</span>
             </div>
         `).join('');
+
+        // Lista bambini in gestione
+        document.getElementById('kids-display').innerHTML = db_kids.map(k => `<span class="tag">${k}</span>`).join('');
     }
 
-    function clearData() {
-        if(confirm("Vuoi cancellare tutto?")) {
-            db = { books: [], kids: [] };
-            save();
-        }
-    }
+    function clearDB() { if(confirm("Cancellare tutto?")) { db_books = []; db_kids = []; sync(); } }
 
     refreshUI();
 </script>
