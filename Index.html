@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -10,42 +9,29 @@
         :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #2d3748; line-height: 1.5; }
-        
-        /* Header & Layout */
         .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px 15px; text-align: center; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        
-        /* Statistiche */
         .stats { display: flex; gap: 10px; margin-top: -15px; margin-bottom: 20px; }
         .stat-card { flex: 1; background: white; padding: 12px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-num { display: block; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
         .stat-label { font-size: 0.65rem; color: #718096; text-transform: uppercase; }
-
-        /* Navigazione */
         .nav { display: flex; background: white; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: bold; color: #718096; font-size: 0.75rem; border-bottom: 3px solid transparent; cursor: pointer; }
         .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8faff; }
-
-        /* Card e Form */
         .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h3 { margin-bottom: 15px; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
         label { display: block; font-size: 0.8rem; font-weight: 700; color: #4a5568; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fff; }
-        
         .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
         .btn-green { background: var(--success); }
         .btn-outline { background: #f7fafc; color: #4a5568; border: 1px solid #e2e8f0; margin-top: 8px; }
         .hidden { display: none; }
-
-        /* Liste */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
         .info h4 { font-size: 0.95rem; color: #2d3748; margin-bottom: 2px; }
         .info p { font-size: 0.8rem; color: #718096; }
         .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; }
         .bg-ok { background: #c6f6d5; color: #22543d; }
         .bg-out { background: #feebc8; color: #744210; }
-
         .scroll-area { max-height: 200px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .tag { display: inline-block; background: #edf2f7; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; margin: 3px; border: 1px solid #cbd5e0; }
     </style>
@@ -59,15 +45,15 @@
 <div class="container">
     <div class="stats">
         <div class="stat-card"><span class="stat-num" id="s-tot">0</span><span class="stat-label">Libri</span></div>
-        <div class="stat-card"><span class="stat-num" id="s-pre">0</span><span class="stat-label">Prestiti</span></div>
+        <div class="stat-card"><span class="stat-num" id="s-pre">0</span><span class="stat-label">In Prestito</span></div>
         <div class="stat-card"><span class="stat-num" id="s-kids">0</span><span class="stat-label">Bambini</span></div>
     </div>
 
     <div class="nav">
-        <button class="nav-btn active" onclick="tab('pre', event)">PRESTITO</button>
-        <button class="nav-btn" onclick="tab('res', event)">RESI</button>
-        <button class="nav-btn" onclick="tab('cat', event)">CATALOGO</button>
-        <button class="nav-btn" onclick="tab('adm', event)">GESTIONE</button>
+        <button class="nav-btn active" id="btn-pre" onclick="tab('pre')">PRESTITO</button>
+        <button class="nav-btn" id="btn-res" onclick="tab('res')">RESI</button>
+        <button class="nav-btn" id="btn-cat" onclick="tab('cat')">CATALOGO</button>
+        <button class="nav-btn" id="btn-adm" onclick="tab('adm')">GESTIONE</button>
     </div>
 
     <div id="tab-pre" class="card">
@@ -103,11 +89,9 @@
         </div>
         <div id="kids-list" class="scroll-area" style="margin-top:10px"></div>
 
-        <h3 style="margin-top:30px">📊 Importazione Massiva (Excel)</h3>
-        <label>Carica Excel "My Library"</label>
+        <h3 style="margin-top:30px">📊 Importa Excel</h3>
         <input type="file" id="ex-file" accept=".xlsx, .xls">
         <button class="btn btn-outline" onclick="importExcel()">Carica Catalogo (.xlsx)</button>
-        
         <button class="btn btn-outline" style="margin-top:40px; color:var(--danger)" onclick="resetData()">Svuota Database</button>
     </div>
 </div>
@@ -122,38 +106,30 @@
         render();
     }
 
-    function tab(name, e) {
+    function tab(name) {
         document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + name).classList.remove('hidden');
-        e.target.classList.add('active');
+        document.getElementById('btn-' + name).classList.add('active');
+        render(); // Forza il refresh quando cambi tab
     }
 
-    // GESTIONE MANUALE
     function addBookManual() {
-        const id = document.getElementById('m-id').value.trim();
+        const id = document.getElementById('m-id').value.trim() || "MAN-"+Date.now();
         const t = document.getElementById('m-title').value.trim();
         const a = document.getElementById('m-auth').value.trim();
-        if(!t) return alert("Inserisci almeno il titolo!");
-        
-        books.push({id: id || Date.now(), title: t, author: a || "N.D.", status: 'ok', kid: '', date: ''});
-        document.getElementById('m-id').value = '';
-        document.getElementById('m-title').value = '';
-        document.getElementById('m-auth').value = '';
+        if(!t) return alert("Inserisci il titolo!");
+        books.push({id: id, title: t, author: a || "N.D.", status: 'ok', kid: '', date: ''});
+        document.getElementById('m-id').value = ''; document.getElementById('m-title').value = ''; document.getElementById('m-auth').value = '';
         save();
         alert("Libro aggiunto!");
     }
 
     function addKidManual() {
         const n = document.getElementById('m-kid').value.trim();
-        if(n) {
-            kids.push(n);
-            document.getElementById('m-kid').value = '';
-            save();
-        }
+        if(n) { kids.push(n); document.getElementById('m-kid').value = ''; save(); }
     }
 
-    // IMPORT EXCEL
     function importExcel() {
         const file = document.getElementById('ex-file').files[0];
         if(!file) return alert("Seleziona un file!");
@@ -165,9 +141,9 @@
             raw.forEach((r, i) => {
                 const title = r.Title || r.Titolo || r.title || "Senza Titolo";
                 const author = r.Author || r.Autore || r.author || "";
-                const id = r.ISBN || r.Barcode || r.ID || "ID-"+i;
+                const id = r.ISBN || r.Barcode || r.ID || "EX-"+i+"-"+Date.now();
                 if(!books.find(b => b.id === id)) {
-                    books.push({id, title, author, status: 'ok', kid: '', date: ''});
+                    books.push({id: String(id), title, author, status: 'ok', kid: '', date: ''});
                 }
             });
             save();
@@ -176,35 +152,47 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // LOGICA PRESTITO
     function doBorrow() {
         const k = document.getElementById('sel-kid').value;
-        const q = document.getElementById('b-search').value.toLowerCase();
+        const q = document.getElementById('b-search').value.toLowerCase().trim();
         if(!k) return alert("Scegli un bambino!");
-        const b = books.find(x => x.status === 'ok' && (x.title.toLowerCase().includes(q) || x.id.toString().includes(q)));
+        if(!q) return alert("Cerca un libro!");
+        
+        const b = books.find(x => x.status === 'ok' && (x.title.toLowerCase().includes(q) || x.id.toString().toLowerCase() === q));
         if(b) {
             b.status = 'out'; b.kid = k; b.date = new Date().toLocaleDateString('it-IT');
             document.getElementById('b-search').value = '';
             save();
-            alert("Prestito registrato!");
+            alert("Prestito registrato per: " + b.title);
         } else { alert("Libro non trovato o già fuori!"); }
     }
 
     function doReturn(id) {
-        const b = books.find(x => x.id === id);
-        if(b) { b.status = 'ok'; b.kid = ''; b.date = ''; save(); }
+        const index = books.findIndex(x => x.id === id);
+        if(index !== -1) {
+            books[index].status = 'ok';
+            books[index].kid = '';
+            books[index].date = '';
+            save(); // Questo ricalcola tutto e aggiorna la vista
+        }
     }
 
     function render() {
+        // Aggiorna Conteggi
         document.getElementById('s-tot').innerText = books.length;
         document.getElementById('s-pre').innerText = books.filter(x => x.status === 'out').length;
         document.getElementById('s-kids').innerText = kids.length;
 
+        // Lista Bambini (Gestione)
         document.getElementById('kids-list').innerHTML = kids.sort().map(k => `<span class="tag">${k}</span>`).join('');
         
+        // Select Bambini (Prestito)
         const sel = document.getElementById('sel-kid');
+        const valPrecedente = sel.value;
         sel.innerHTML = '<option value="">-- Seleziona --</option>' + kids.sort().map(k => `<option value="${k}">${k}</option>`).join('');
+        sel.value = valPrecedente;
 
+        // Lista Resi (Mostra solo quelli 'out')
         const resList = document.getElementById('list-res');
         const out = books.filter(x => x.status === 'out');
         resList.innerHTML = out.map(b => `
@@ -214,17 +202,20 @@
             </div>
         `).join('') || '<p style="text-align:center; color:#999; margin-top:10px">Nessun libro fuori</p>';
 
+        // Catalogo Completo (Filtro ricerca)
         const q = document.getElementById('cat-search').value.toLowerCase();
         const catList = document.getElementById('list-all');
-        catList.innerHTML = books.filter(b => b.title.toLowerCase().includes(q) || b.id.toString().includes(q)).map(b => `
+        catList.innerHTML = books.filter(b => b.title.toLowerCase().includes(q) || b.id.toString().toLowerCase().includes(q)).map(b => `
             <div class="list-item">
                 <div class="info"><h4>${b.title}</h4><p>${b.author} | ID: ${b.id}</p></div>
-                <span class="badge ${b.status==='ok'?'bg-ok':'bg-out'}">${b.status==='ok'?'Disp.':'Fuori'}</span>
+                <span class="badge ${b.status==='ok'?'bg-ok':'bg-out'}">${b.status==='ok'?'Disponibile':'In Prestito'}</span>
             </div>
         `).join('');
     }
 
     function resetData() { if(confirm("Cancellare TUTTI i dati?")) { books = []; kids = []; save(); } }
+    
+    // Primo avvio
     render();
 </script>
 </body>
