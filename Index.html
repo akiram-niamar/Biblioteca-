@@ -1,218 +1,160 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BiblioScuola PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BiblioScuola</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-:root{--primary:#5a67d8;--secondary:#764ba2;--bg:#f4f7f6;--success:#48bb78;--danger:#e53e3e}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:#2d3748}
-.header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:20px;text-align:center}
-.container{padding:15px;max-width:600px;margin:auto}
-.stats{display:flex;gap:10px;margin:-15px 0 20px}
-.stat-card{flex:1;background:#fff;padding:12px;border-radius:12px;text-align:center}
-.stat-num{font-size:1.2rem;font-weight:bold;color:var(--primary)}
-.stat-label{font-size:.6rem;color:#718096;text-transform:uppercase}
-.nav{display:flex;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:20px}
-.nav-btn{flex:1;border:none;padding:15px 5px;background:none;font-weight:bold;font-size:.75rem;color:#718096;cursor:pointer}
-.nav-btn.active{color:var(--primary);border-bottom:3px solid var(--primary)}
-.card{background:#fff;padding:20px;border-radius:16px;margin-bottom:20px}
-h3{margin-bottom:15px;color:var(--primary)}
-input,select{width:100%;padding:12px;margin-bottom:15px;border:1px solid #e2e8f0;border-radius:10px}
-.btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold;cursor:pointer}
-.btn-success{background:var(--success)}
-.btn-res{padding:6px 12px;font-size:.75rem;background:var(--success)}
-.hidden{display:none}
-.list-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #edf2f7}
-.info h4{font-size:.9rem}
-.info p{font-size:.75rem;color:#718096}
-.badge{font-size:.7rem;padding:4px 8px;border-radius:6px;font-weight:bold}
-.bg-ok{background:#c6f6d5;color:#22543d}
-.bg-out{background:#feebc8;color:#744210}
-.tag{display:inline-block;background:#edf2f7;padding:4px 10px;border-radius:15px;font-size:.75rem;margin:3px}
+body{font-family:system-ui;background:#f4f7f6;margin:0}
+.header{background:#5a67d8;color:white;padding:15px;text-align:center}
+.container{max-width:700px;margin:auto;padding:15px}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:15px}
+h3{color:#5a67d8}
+input,select,button{width:100%;padding:10px;margin:5px 0}
+button{background:#5a67d8;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer}
+button.danger{background:#e53e3e}
+button.small{width:auto;padding:5px 10px;font-size:12px}
+.list{border-top:1px solid #eee;margin-top:10px}
+.item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+.badge{padding:3px 8px;border-radius:6px;font-size:12px}
+.ok{background:#c6f6d5}
+.out{background:#feebc8}
 </style>
 </head>
 
 <body>
 <div class="header"><h1>📚 BiblioScuola</h1></div>
-
 <div class="container">
 
-<div class="stats">
-<div class="stat-card"><span id="s-tot" class="stat-num">0</span><span class="stat-label">Libri</span></div>
-<div class="stat-card"><span id="s-pre" class="stat-num">0</span><span class="stat-label">Fuori</span></div>
-<div class="stat-card"><span id="s-kids" class="stat-num">0</span><span class="stat-label">Bambini</span></div>
+<div class="card">
+<h3>➕ Bambini</h3>
+<input id="kid-name" placeholder="Nome bambino">
+<button onclick="addKid()">Aggiungi</button>
+<input type="file" id="kid-file" accept=".xlsx,.xls">
+<button onclick="importKids()">Importa Bambini da Excel</button>
+<button onclick="exportKids()">Esporta Bambini</button>
+<div id="kids-list" class="list"></div>
 </div>
 
-<div class="nav">
-<button class="nav-btn active" id="n-pre" onclick="showTab('pre')">PRESTITO</button>
-<button class="nav-btn" id="n-res" onclick="showTab('res')">RESI</button>
-<button class="nav-btn" id="n-cat" onclick="showTab('cat')">CATALOGO</button>
-<button class="nav-btn" id="n-adm" onclick="showTab('adm')">GESTIONE</button>
+<div class="card">
+<h3>➕ Libri</h3>
+<input id="book-title" placeholder="Titolo">
+<input id="book-author" placeholder="Autore">
+<button onclick="addBook()">Aggiungi</button>
+<input type="file" id="book-file" accept=".xlsx,.xls">
+<button onclick="importBooks()">Importa Libri da Excel</button>
+<button onclick="exportBooks()">Esporta Libri</button>
+<div id="books-list" class="list"></div>
 </div>
 
-<div id="tab-pre" class="card">
-<h3>Registra Prestito</h3>
+<div class="card">
+<h3>📖 Prestito</h3>
 <select id="sel-kid"></select>
 <select id="sel-book"></select>
-<button class="btn" onclick="executeBorrow()">Conferma Prestito</button>
+<button onclick="borrowBook()">Conferma Prestito</button>
 </div>
 
-<div id="tab-res" class="card hidden">
-<h3>Libri in Prestito</h3>
-<div id="list-res"></div>
+<div class="card">
+<h3>🔁 Resi</h3>
+<div id="loaned-list"></div>
 </div>
 
-<div id="tab-cat" class="card hidden">
-<input id="search-cat" placeholder="🔍 Cerca..." onkeyup="refreshUI()">
-<div id="list-cat"></div>
-</div>
-
-<div id="tab-adm" class="card hidden">
-<h3>➕ Aggiungi Libro</h3>
-<input id="new-id" placeholder="ID">
-<input id="new-title" placeholder="Titolo">
-<input id="new-auth" placeholder="Autore">
-<button class="btn btn-success" onclick="addBook()">Salva Libro</button>
-
-<h3 style="margin-top:20px">👶 Aggiungi Bambino</h3>
-<div style="display:flex;gap:5px">
-<input id="new-kid" placeholder="Nome" style="margin:0">
-<button class="btn" style="width:70px" onclick="addKid()">OK</button>
-</div>
-<div id="kids-display"></div>
-
-<h3 style="margin-top:20px">📤 Esporta</h3>
-<button class="btn" onclick="exportKids()">Esporta Bambini</button>
-<button class="btn" style="margin-top:10px" onclick="exportBooks()">Esporta Libri</button>
-
-<h3 style="margin-top:20px">📊 Importa Excel</h3>
-<input type="file" id="excel-input" accept=".xlsx,.xls">
-<button class="btn" onclick="importExcel()">Carica File</button>
-
-<button class="btn" style="margin-top:30px;background:var(--danger)" onclick="clearDB()">Svuota Tutto</button>
-</div>
 </div>
 
 <script>
-let db_books=JSON.parse(localStorage.getItem("lib_books"))||[]
-let db_kids=JSON.parse(localStorage.getItem("lib_kids"))||[]
+let kids = JSON.parse(localStorage.getItem("kids")) || [];
+let books = JSON.parse(localStorage.getItem("books")) || [];
 
-function sync(){
-localStorage.setItem("lib_books",JSON.stringify(db_books))
-localStorage.setItem("lib_kids",JSON.stringify(db_kids))
-refreshUI()
-}
+function save(){localStorage.setItem("kids",JSON.stringify(kids));localStorage.setItem("books",JSON.stringify(books));render();}
 
-function showTab(t){
-document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"))
-document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"))
-document.getElementById("tab-"+t).classList.remove("hidden")
-document.getElementById("n-"+t).classList.add("active")
-refreshUI()
-}
-
-function addBook(){
-let t=newTitle.value
-if(!t)return alert("Inserisci titolo")
-db_books.push({id:newId.value||Date.now(),title:t,author:newAuth.value||"",loaned:false,kid:"",date:""})
-newId.value=newTitle.value=newAuth.value=""
-sync()
-}
-
+// ---------- BAMBINI ----------
 function addKid(){
-let n=newKid.value.trim()
-if(n&&!db_kids.includes(n)){db_kids.push(n);newKid.value="";sync()}
+const n=document.getElementById("kid-name").value.trim();
+if(!n||kids.includes(n))return;
+kids.push(n);document.getElementById("kid-name").value="";save();
 }
 
 function deleteKid(name){
-if(db_books.some(b=>b.loaned&&b.kid===name))return alert("Bambino con libri in prestito")
-if(confirm("Eliminare "+name+"?")){
-db_kids=db_kids.filter(k=>k!==name)
-sync()
-}
+if(books.some(b=>b.loaned&&b.kid===name)){alert("Ha libri in prestito");return;}
+kids=kids.filter(k=>k!==name);save();
 }
 
-function executeBorrow(){
-let kid=selKid.value,bookId=selBook.value
-if(!kid||!bookId)return alert("Seleziona tutto")
-let b=db_books.find(x=>x.id==bookId)
-b.loaned=true;b.kid=kid;b.date=new Date().toLocaleDateString("it-IT")
-sync()
-}
-
-function executeReturn(id){
-let b=db_books.find(x=>x.id==id)
-b.loaned=false;b.kid="";b.date=""
-sync()
-}
-
-function importExcel(){
-let f=excelInput.files[0];if(!f)return
-let r=new FileReader()
+function importKids(){
+const f=document.getElementById("kid-file").files[0];if(!f)return;
+const r=new FileReader();
 r.onload=e=>{
-let wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"})
-let data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])
-data.forEach(r=>{
-let id=String(r.ID||r.ISBN||Math.random())
-if(!db_books.find(b=>b.id==id))
-db_books.push({id,title:r.Titolo||"Senza titolo",author:r.Autore||"",loaned:false,kid:"",date:""})
-})
-sync()
-}
-r.readAsArrayBuffer(f)
+const wb=XLSX.read(e.target.result,{type:"array"});
+const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+data.forEach(r=>{const n=r.Nome||r.Name;if(n&&!kids.includes(n))kids.push(n)});
+save();
+};
+r.readAsArrayBuffer(f);
 }
 
 function exportKids(){
-let ws=XLSX.utils.aoa_to_sheet([["Nome"],...db_kids.map(k=>[k])])
-let wb=XLSX.utils.book_new()
-XLSX.utils.book_append_sheet(wb,ws,"Bambini")
-XLSX.writeFile(wb,"bambini.xlsx")
+const ws=XLSX.utils.aoa_to_sheet([["Nome"],...kids.map(k=>[k])]);
+const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Bambini");
+XLSX.writeFile(wb,"bambini.xlsx");
+}
+
+// ---------- LIBRI ----------
+function addBook(){
+const t=document.getElementById("book-title").value.trim();
+if(!t)return;
+books.push({id:Date.now()+Math.random(),title:t,author:book-author.value||"",loaned:false,kid:"",date:""});
+book-title.value="";book-author.value="";save();
+}
+
+function deleteBook(id){
+if(books.find(b=>b.id===id).loaned){alert("Libro in prestito");return;}
+books=books.filter(b=>b.id!==id);save();
+}
+
+function importBooks(){
+const f=document.getElementById("book-file").files[0];if(!f)return;
+const r=new FileReader();
+r.onload=e=>{
+const wb=XLSX.read(e.target.result,{type:"array"});
+const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+data.forEach(r=>{
+books.push({id:Date.now()+Math.random(),title:r.Titolo||r.Title||"",author:r.Autore||"",loaned:false,kid:"",date:""});
+});
+save();
+};
+r.readAsArrayBuffer(f);
 }
 
 function exportBooks(){
-let ws=XLSX.utils.json_to_sheet(db_books)
-let wb=XLSX.utils.book_new()
-XLSX.utils.book_append_sheet(wb,ws,"Libri")
-XLSX.writeFile(wb,"libri.xlsx")
+const ws=XLSX.utils.json_to_sheet(books);
+const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Libri");
+XLSX.writeFile(wb,"libri.xlsx");
 }
 
-function clearDB(){
-if(confirm("Cancellare tutto?")){
-db_books=[];db_kids=[];sync()
-}
-}
-
-function refreshUI(){
-sTot.innerText=db_books.length
-sPre.innerText=db_books.filter(b=>b.loaned).length
-sKids.innerText=db_kids.length
-
-selKid.innerHTML='<option value="">Bambino</option>'+db_kids.sort().map(k=>`<option>${k}</option>`).join("")
-selBook.innerHTML='<option value="">Libro</option>'+db_books.filter(b=>!b.loaned).map(b=>`<option value="${b.id}">${b.title}</option>`).join("")
-
-listRes.innerHTML=db_books.filter(b=>b.loaned).map(b=>`
-<div class="list-item">
-<div class="info"><h4>${b.title}</h4><p>${b.kid} (${b.date})</p></div>
-<button class="btn-res" onclick="executeReturn('${b.id}')">RESO</button>
-</div>`).join("")||"<p>Nessun libro fuori</p>"
-
-listCat.innerHTML=db_books.filter(b=>b.title.toLowerCase().includes(searchCat.value.toLowerCase())).map(b=>`
-<div class="list-item">
-<div class="info"><h4>${b.title}</h4><p>${b.author}</p></div>
-<span class="badge ${b.loaned?'bg-out':'bg-ok'}">${b.loaned?'Fuori':'Libero'}</span>
-</div>`).join("")
-
-kidsDisplay.innerHTML=db_kids.map(k=>`
-<span class="tag">${k}
-<button onclick="deleteKid('${k}')" style="border:none;background:none;color:#e53e3e;cursor:pointer">✕</button>
-</span>`).join("")
+// ---------- PRESTITI ----------
+function borrowBook(){
+const k=sel-kid.value,b=sel-book.value;
+if(!k||!b)return;
+const book=books.find(x=>x.id==b);
+book.loaned=true;book.kid=k;book.date=new Date().toLocaleDateString("it-IT");
+save();
 }
 
-refreshUI()
+function returnBook(id){
+const b=books.find(x=>x.id===id);
+b.loaned=false;b.kid="";b.date="";save();
+}
+
+// ---------- RENDER ----------
+function render(){
+kids-list.innerHTML=kids.map(k=>`<div class="item">${k}<button class="small danger" onclick="deleteKid('${k}')">✕</button></div>`).join("");
+books-list.innerHTML=books.map(b=>`<div class="item">${b.title}<button class="small danger" onclick="deleteBook(${b.id})">✕</button></div>`).join("");
+sel-kid.innerHTML='<option></option>'+kids.map(k=>`<option>${k}</option>`).join("");
+sel-book.innerHTML='<option></option>'+books.filter(b=>!b.loaned).map(b=>`<option value="${b.id}">${b.title}</option>`).join("");
+loaned-list.innerHTML=books.filter(b=>b.loaned).map(b=>`<div class="item">${b.title} → ${b.kid}<button class="small" onclick="returnBook(${b.id})">RESO</button></div>`).join("");
+}
+render();
 </script>
 </body>
-</html>
+        </html>
