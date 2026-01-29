@@ -9,7 +9,7 @@
         :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; --gray: #718096; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 40px; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         
         /* Stats & Nav */
@@ -23,15 +23,19 @@
         .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8faff; }
 
         /* Card e Input */
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative; }
         h3 { margin-bottom: 15px; font-size: 1rem; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 5px; color: #4a5568; }
         input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fff; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-bottom: 5px; }
+        /* Suggerimenti di ricerca */
+        .search-results { position: absolute; background: white; width: calc(100% - 40px); z-index: 100; border: 1px solid #e2e8f0; border-radius: 0 0 10px 10px; margin-top: -13px; max-height: 150px; overflow-y: auto; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none; }
+        .search-item { padding: 12px; border-bottom: 1px solid #f7fafc; cursor: pointer; font-size: 0.9rem; }
+        .search-item:active { background: #edf2f7; }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
-        .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
         .btn-sm { width: auto; padding: 6px 10px; font-size: 0.7rem; }
         
         .hidden { display: none; }
@@ -40,7 +44,6 @@
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
         .info h4 { font-size: 0.9rem; color: #2d3748; }
         .info p { font-size: 0.75rem; color: var(--gray); }
-        
         .scroll-area { max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; padding: 5px; }
     </style>
 </head>
@@ -65,72 +68,70 @@
     </div>
 
     <div id="tab-pre" class="card">
-        <h3>Nuovo Prestito</h3>
-        <label>👦 Cerca/Digita Bambino</label>
-        <input type="text" id="input-kid" list="list-kids-search" placeholder="Inizia a scrivere il nome...">
-        <datalist id="list-kids-search"></datalist>
+        <h3>Registra Prestito</h3>
+        
+        <label>👦 Cerca Bambino</label>
+        <input type="text" id="in-kid" placeholder="Scrivi il nome..." onkeyup="filterSearch('kid')">
+        <div id="res-kid" class="search-results"></div>
 
-        <label>📖 Cerca/Digita Libro Disponibile</label>
-        <input type="text" id="input-book" list="list-books-search" placeholder="Inizia a scrivere il titolo...">
-        <datalist id="list-books-search"></datalist>
+        <label>📖 Cerca Libro Disponibile</label>
+        <input type="text" id="in-book" placeholder="Scrivi il titolo..." onkeyup="filterSearch('book')">
+        <div id="res-book" class="search-results"></div>
 
-        <button class="btn" onclick="execLoan()">Registra Prestito</button>
+        <button class="btn" style="margin-top:10px" onclick="execLoan()">Conferma Prestito</button>
     </div>
 
     <div id="tab-res" class="card hidden">
-        <h3>Libri in prestito</h3>
+        <h3>Libri da Rientrare</h3>
         <div id="list-res"></div>
     </div>
 
     <div id="tab-cat" class="card hidden">
-        <input type="text" id="search-cat" placeholder="🔍 Cerca nel catalogo..." onkeyup="render()">
+        <input type="text" id="search-cat" placeholder="🔍 Filtra catalogo..." onkeyup="render()">
         <div id="list-cat"></div>
     </div>
 
     <div id="tab-adm" class="card hidden">
-        <h3>➕ Aggiunta Manuale</h3>
+        <h3>➕ Aggiunta Rapida</h3>
         <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <label>Cosa vuoi aggiungere?</label>
             <select id="add-type" onchange="toggleAddFields()">
                 <option value="book">Libro</option>
                 <option value="kid">Bambino</option>
             </select>
-            
             <div id="fields-book">
                 <input type="text" id="m-id" placeholder="ID (ISBN o Barcode)">
-                <input type="text" id="m-title" placeholder="Titolo del libro">
+                <input type="text" id="m-title" placeholder="Titolo">
                 <input type="text" id="m-auth" placeholder="Autore">
             </div>
             <div id="fields-kid" class="hidden">
-                <input type="text" id="m-kid-name" placeholder="Nome e Cognome">
+                <input type="text" id="m-kid-name" placeholder="Nome Bambino">
             </div>
             <button class="btn btn-success" onclick="manualAdd()">Salva</button>
         </div>
 
         <h3>📁 Excel & Backup</h3>
-        <button class="btn btn-outline" onclick="exportToExcel()">Scarica Excel Catalogo (Backup)</button>
-        <label style="margin-top:10px">Aggiorna da "My Library" (.xlsx)</label>
+        <button class="btn" style="background:var(--gray); margin-bottom:10px" onclick="exportToExcel()">Esporta Backup Excel</button>
+        <label>Importa da Excel</label>
         <input type="file" id="xl-input" accept=".xlsx, .xls">
-        <button class="btn" style="background:#4a5568" onclick="importFromExcel()">Importa e Unisci</button>
+        <button class="btn" style="background:#4a5568" onclick="importFromExcel()">Carica File</button>
 
-        <h3 style="margin-top:30px">🗑️ Elimina Elementi</h3>
-        <label>Bambini (Clicca "Elimina")</label>
+        <h3 style="margin-top:30px">🗑️ Gestione Liste</h3>
+        <label>Bambini</label>
         <div id="admin-kids-list" class="scroll-area"></div>
-        
-        <label style="margin-top:15px">Libri (Clicca "Elimina")</label>
+        <label style="margin-top:15px">Libri (Ultimi 20)</label>
         <div id="admin-books-list" class="scroll-area"></div>
-
-        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">CANCELLA TUTTO L'ARCHIVIO</button>
+        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">RESET TOTALE</button>
     </div>
 </div>
 
 <script>
-    let books = JSON.parse(localStorage.getItem('lib_v4_books')) || [];
-    let kids = JSON.parse(localStorage.getItem('lib_v4_kids')) || [];
+    let books = JSON.parse(localStorage.getItem('lib_v5_books')) || [];
+    let kids = JSON.parse(localStorage.getItem('lib_v5_kids')) || [];
+    let selectedBookId = null;
 
     function sync() {
-        localStorage.setItem('lib_v4_books', JSON.stringify(books));
-        localStorage.setItem('lib_v4_kids', JSON.stringify(kids));
+        localStorage.setItem('lib_v5_books', JSON.stringify(books));
+        localStorage.setItem('lib_v5_kids', JSON.stringify(kids));
         render();
     }
 
@@ -142,6 +143,40 @@
         render();
     }
 
+    // --- SISTEMA DI RICERCA PERSONALIZZATO ---
+    function filterSearch(type) {
+        const input = document.getElementById('in-' + type);
+        const resBox = document.getElementById('res-' + type);
+        const query = input.value.toLowerCase();
+        
+        if (query.length < 1) { resBox.style.display = 'none'; return; }
+
+        let matches = [];
+        if (type === 'kid') {
+            matches = kids.filter(k => k.toLowerCase().includes(query)).sort();
+        } else {
+            matches = books.filter(b => !b.out && b.title.toLowerCase().includes(query));
+        }
+
+        if (matches.length > 0) {
+            resBox.innerHTML = matches.map(m => {
+                const label = (type === 'kid') ? m : m.title;
+                const id = (type === 'kid') ? m : m.id;
+                return `<div class="search-item" onclick="selectMatch('${type}', '${label}', '${id}')">${label}</div>`;
+            }).join('');
+            resBox.style.display = 'block';
+        } else {
+            resBox.style.display = 'none';
+        }
+    }
+
+    function selectMatch(type, label, id) {
+        document.getElementById('in-' + type).value = label;
+        document.getElementById('res-' + type).style.display = 'none';
+        if (type === 'book') selectedBookId = id;
+    }
+
+    // --- FUNZIONI CORE ---
     function toggleAddFields() {
         const type = document.getElementById('add-type').value;
         document.getElementById('fields-book').classList.toggle('hidden', type !== 'book');
@@ -152,49 +187,30 @@
         const type = document.getElementById('add-type').value;
         if (type === 'book') {
             const t = document.getElementById('m-title').value.trim();
-            if (!t) return alert("Inserisci il titolo");
-            books.push({
-                id: document.getElementById('m-id').value.trim() || "ID-" + Date.now(),
-                title: t, author: document.getElementById('m-auth').value.trim() || "N.D.",
-                out: false, kid: "", date: ""
-            });
+            if (!t) return alert("Titolo mancante");
+            books.push({ id: document.getElementById('m-id').value.trim() || "ID-"+Date.now(), title: t, author: document.getElementById('m-auth').value.trim() || "N.D.", out: false, kid: "", date: "" });
             document.getElementById('m-id').value = ''; document.getElementById('m-title').value = ''; document.getElementById('m-auth').value = '';
         } else {
             const n = document.getElementById('m-kid-name').value.trim();
-            if (!n) return alert("Inserisci il nome");
+            if (!n) return alert("Nome mancante");
             if (!kids.includes(n)) kids.push(n);
             document.getElementById('m-kid-name').value = '';
         }
-        sync();
-        alert("Aggiunto!");
-    }
-
-    function deleteKid(name) {
-        if (confirm(`Eliminare ${name}?`)) { kids = kids.filter(k => k !== name); sync(); }
-    }
-
-    function deleteBook(id) {
-        if (confirm(`Eliminare questo libro?`)) { books = books.filter(b => b.id !== id); sync(); }
+        sync(); alert("Salvato!");
     }
 
     function execLoan() {
-        const kName = document.getElementById('input-kid').value;
-        const bInfo = document.getElementById('input-book').value;
-        
-        // Estraiamo l'ID dall'input del libro (che è salvato come "Titolo [ID]")
-        const bId = bInfo.split(" [ID: ")[1]?.replace("]", "");
+        const kName = document.getElementById('in-kid').value;
+        if (!kids.includes(kName)) return alert("Seleziona un bambino esistente dalla lista!");
+        if (!selectedBookId) return alert("Seleziona un libro dalla lista suggerimenti!");
 
-        if (!kids.includes(kName) || !bId) {
-            return alert("Attenzione: Seleziona un bambino e un libro validi dai suggerimenti!");
-        }
-
-        const b = books.find(x => x.id === bId);
+        const b = books.find(x => x.id === selectedBookId);
         if (b) {
             b.out = true; b.kid = kName; b.date = new Date().toLocaleDateString('it-IT');
-            document.getElementById('input-kid').value = '';
-            document.getElementById('input-book').value = '';
-            sync();
-            alert("Prestito registrato correttamente!");
+            document.getElementById('in-kid').value = '';
+            document.getElementById('in-book').value = '';
+            selectedBookId = null;
+            sync(); alert("Prestito registrato!");
         }
     }
 
@@ -203,74 +219,18 @@
         if (b) { b.out = false; b.kid = ""; b.date = ""; sync(); }
     }
 
+    function deleteKid(n) { if(confirm("Eliminare?")) { kids = kids.filter(k => k !== n); sync(); } }
+    function deleteBook(id) { if(confirm("Eliminare libro?")) { books = books.filter(b => b.id !== id); sync(); } }
+
     function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(books);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, ws, "Biblioteca");
+        XLSX.utils.book_append_sheet(wb, ws, "Libri");
         XLSX.writeFile(wb, "Backup_Biblioteca.xlsx");
     }
 
     function importFromExcel() {
         const file = document.getElementById('xl-input').files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, {type: 'array'});
-            const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            raw.forEach(r => {
-                const id = String(r.ISBN || r.Barcode || r.ID || r.id || Math.random());
-                if (!books.find(x => x.id === id)) {
-                    books.push({
-                        id: id, title: r.Titolo || r.Title || "Senza Titolo",
-                        author: r.Autore || r.Author || "N.D.", out: false, kid: "", date: ""
-                    });
-                }
-            });
-            sync(); alert("Catalogo aggiornato!");
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    function render() {
-        document.getElementById('s-tot').innerText = books.length;
-        document.getElementById('s-pre').innerText = books.filter(x => x.out).length;
-        document.getElementById('s-kids').innerText = kids.length;
-
-        // Suggerimenti Prestito (Datalist)
-        document.getElementById('list-kids-search').innerHTML = kids.sort().map(k => `<option value="${k}">`).join('');
-        const availBooks = books.filter(x => !x.out);
-        document.getElementById('list-books-search').innerHTML = availBooks.sort((a,b)=>a.title.localeCompare(b.title))
-            .map(b => `<option value="${b.title} [ID: ${b.id}]">`).join('');
-
-        // Liste Resi e Catalogo
-        const resList = document.getElementById('list-res');
-        resList.innerHTML = books.filter(x => x.out).map(b => `
-            <div class="list-item">
-                <div class="info"><h4>${b.title}</h4><p>${b.kid} (${b.date})</p></div>
-                <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
-            </div>
-        `).join('') || '<p style="text-align:center; padding:15px; color:gray">Nessun libro fuori</p>';
-
-        const q = document.getElementById('search-cat').value.toLowerCase();
-        document.getElementById('list-cat').innerHTML = books.filter(x => x.title.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)).map(b => `
-            <div class="list-item">
-                <div class="info"><h4>${b.title}</h4><p>${b.author}</p></div>
-                <span class="badge ${b.out?'bg-out':'bg-ok'}">${b.out?'Fuori':'Disponibile'}</span>
-            </div>
-        `).join('');
-
-        // Admin Liste
-        document.getElementById('admin-kids-list').innerHTML = kids.sort().map(k => `
-            <div class="list-item"><span>${k}</span><button class="btn btn-sm btn-danger" onclick="deleteKid('${k}')">Elimina</button></div>
-        `).join('');
-        document.getElementById('admin-books-list').innerHTML = books.slice(-15).reverse().map(b => `
-            <div class="list-item"><span>${b.title}</span><button class="btn btn-sm btn-danger" onclick="deleteBook('${b.id}')">Elimina</button></div>
-        `).join('');
-    }
-
-    function fullReset() { if(confirm("CANCELLARE TUTTO?")) { books=[]; kids=[]; sync(); } }
-    render();
-</script>
-</body>
-</html>
+        const reader
+    
