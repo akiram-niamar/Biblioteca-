@@ -3,54 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BiblioScuola Gestionale</title>
+    <title>BiblioScuola PRO V6</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #5a67d8; --secondary: #764ba2; --bg: #f4f7f6; --success: #48bb78; --danger: #e53e3e; --gray: #718096; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 40px; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: #2d3748; padding-bottom: 40px; }
+        
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         
-        /* Stats & Nav */
+        /* Stats */
         .stats { display: flex; gap: 8px; margin-top: -15px; margin-bottom: 20px; }
         .stat-card { flex: 1; background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-num { display: block; font-size: 1.1rem; font-weight: bold; color: var(--primary); }
         .stat-label { font-size: 0.6rem; color: var(--gray); text-transform: uppercase; }
 
+        /* Navigazione */
         .nav { display: flex; background: white; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: bold; color: var(--gray); font-size: 0.7rem; border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: bold; color: var(--gray); font-size: 0.75rem; border-bottom: 3px solid transparent; cursor: pointer; transition: 0.3s; }
         .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8faff; }
 
-        /* Card e Input */
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative; }
+        /* Card e Layout */
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; display: none; position: relative; }
+        .card.active { display: block; }
+        
         h3 { margin-bottom: 15px; font-size: 1rem; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 5px; color: #4a5568; }
         input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fff; }
         
-        /* Suggerimenti di ricerca */
-        .search-results { position: absolute; background: white; width: calc(100% - 40px); z-index: 100; border: 1px solid #e2e8f0; border-radius: 0 0 10px 10px; margin-top: -13px; max-height: 150px; overflow-y: auto; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none; }
-        .search-item { padding: 12px; border-bottom: 1px solid #f7fafc; cursor: pointer; font-size: 0.9rem; }
+        /* Ricerca Dinamica */
+        .search-container { position: relative; margin-bottom: 15px; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 1000; border: 1px solid #e2e8f0; border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none; }
+        .search-item { padding: 12px; border-bottom: 1px solid #f7fafc; cursor: pointer; font-size: 0.95rem; }
         .search-item:active { background: #edf2f7; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        /* Bottoni */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-bottom: 8px; font-size: 1rem; }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
-        .btn-sm { width: auto; padding: 6px 10px; font-size: 0.7rem; }
+        .btn-gray { background: var(--gray); }
+        .btn-sm { width: auto; padding: 6px 12px; font-size: 0.75rem; margin: 0; }
         
-        .hidden { display: none; }
-
         /* Liste */
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
-        .info h4 { font-size: 0.9rem; color: #2d3748; }
-        .info p { font-size: 0.75rem; color: var(--gray); }
-        .scroll-area { max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; padding: 5px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+        .info h4 { font-size: 0.95rem; color: #2d3748; }
+        .info p { font-size: 0.8rem; color: var(--gray); }
+        .scroll-area { max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; padding: 10px; background: #fafafa; }
+        .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .bg-ok { background: #c6f6d5; color: #22543d; }
+        .bg-out { background: #feebc8; color: #744210; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>📚 BiblioScuola PRO</h1>
+    <h1>📚 BiblioScuola Gestionale</h1>
 </div>
 
 <div class="container">
@@ -61,148 +69,156 @@
     </div>
 
     <div class="nav">
-        <button class="nav-btn active" id="n-pre" onclick="showTab('pre')">PRESTITO</button>
-        <button class="nav-btn" id="n-res" onclick="showTab('res')">RESI</button>
-        <button class="nav-btn" id="n-cat" onclick="showTab('cat')">CATALOGO</button>
-        <button class="nav-btn" id="n-adm" onclick="showTab('adm')">GESTIONE</button>
+        <button class="nav-btn active" onclick="showTab('tab-pre', this)">PRESTITO</button>
+        <button class="nav-btn" onclick="showTab('tab-res', this)">RESI</button>
+        <button class="nav-btn" onclick="showTab('tab-cat', this)">CATALOGO</button>
+        <button class="nav-btn" onclick="showTab('tab-adm', this)">GESTIONE</button>
     </div>
 
-    <div id="tab-pre" class="card">
-        <h3>Registra Prestito</h3>
-        
+    <div id="tab-pre" class="card active">
+        <h3>Nuovo Prestito</h3>
         <label>👦 Cerca Bambino</label>
-        <input type="text" id="in-kid" placeholder="Scrivi il nome..." onkeyup="filterSearch('kid')">
-        <div id="res-kid" class="search-results"></div>
+        <div class="search-container">
+            <input type="text" id="in-kid" placeholder="Scrivi il nome del bambino..." onkeyup="filterSearch('kid')">
+            <div id="res-kid" class="search-results"></div>
+        </div>
 
         <label>📖 Cerca Libro Disponibile</label>
-        <input type="text" id="in-book" placeholder="Scrivi il titolo..." onkeyup="filterSearch('book')">
-        <div id="res-book" class="search-results"></div>
+        <div class="search-container">
+            <input type="text" id="in-book" placeholder="Titolo del libro..." onkeyup="filterSearch('book')">
+            <div id="res-book" class="search-results"></div>
+        </div>
 
-        <button class="btn" style="margin-top:10px" onclick="execLoan()">Conferma Prestito</button>
+        <button class="btn btn-success" onclick="execLoan()">REGISTRA PRESTITO</button>
     </div>
 
-    <div id="tab-res" class="card hidden">
+    <div id="tab-res" class="card">
         <h3>Libri da Rientrare</h3>
         <div id="list-res"></div>
     </div>
 
-    <div id="tab-cat" class="card hidden">
-        <input type="text" id="search-cat" placeholder="🔍 Filtra catalogo..." onkeyup="render()">
+    <div id="tab-cat" class="card">
+        <input type="text" id="search-cat" placeholder="🔍 Filtra per titolo o ID..." onkeyup="render()">
         <div id="list-cat"></div>
     </div>
 
-    <div id="tab-adm" class="card hidden">
-        <h3>➕ Aggiunta Rapida</h3>
-        <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <select id="add-type" onchange="toggleAddFields()">
-                <option value="book">Libro</option>
-                <option value="kid">Bambino</option>
-            </select>
-            <div id="fields-book">
-                <input type="text" id="m-id" placeholder="ID (ISBN o Barcode)">
-                <input type="text" id="m-title" placeholder="Titolo">
-                <input type="text" id="m-auth" placeholder="Autore">
-            </div>
-            <div id="fields-kid" class="hidden">
-                <input type="text" id="m-kid-name" placeholder="Nome Bambino">
-            </div>
-            <button class="btn btn-success" onclick="manualAdd()">Salva</button>
+    <div id="tab-adm" class="card">
+        <h3>➕ Aggiunta Manuale</h3>
+        <select id="add-type" onchange="toggleAddFields()">
+            <option value="book">Libro</option>
+            <option value="kid">Bambino</option>
+        </select>
+        
+        <div id="fields-book">
+            <input type="text" id="m-id" placeholder="ID (ISBN o Barcode)">
+            <input type="text" id="m-title" placeholder="Titolo">
+            <input type="text" id="m-auth" placeholder="Autore">
         </div>
+        <div id="fields-kid" style="display:none">
+            <input type="text" id="m-kid-name" placeholder="Nome Bambino">
+        </div>
+        <button class="btn btn-success" onclick="manualAdd()">SALVA</button>
 
-        <h3>📁 Excel & Backup</h3>
-        <button class="btn" style="background:var(--gray); margin-bottom:10px" onclick="exportToExcel()">Esporta Backup Excel</button>
-        <label>Importa da Excel</label>
-        <input type="file" id="xl-input" accept=".xlsx, .xls">
-        <button class="btn" style="background:#4a5568" onclick="importFromExcel()">Carica File</button>
+        <h3 style="margin-top:25px">📁 Backup Excel</h3>
+        <button class="btn btn-gray" onclick="exportToExcel()">ESPORTA CATALOGO</button>
+        <input type="file" id="xl-input" accept=".xlsx, .xls" style="margin-top:10px">
+        <button class="btn btn-gray" onclick="importFromExcel()">IMPORTA CATALOGO</button>
 
-        <h3 style="margin-top:30px">🗑️ Gestione Liste</h3>
-        <label>Bambini</label>
+        <h3 style="margin-top:25px">🗑️ Gestione Liste</h3>
+        <label>Bambini (X per eliminare)</label>
         <div id="admin-kids-list" class="scroll-area"></div>
-        <label style="margin-top:15px">Libri (Ultimi 20)</label>
+        <label style="margin-top:15px">Libri (X per eliminare)</label>
         <div id="admin-books-list" class="scroll-area"></div>
-        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">RESET TOTALE</button>
+        
+        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">CANCELLA TUTTO</button>
     </div>
 </div>
 
 <script>
-    let books = JSON.parse(localStorage.getItem('lib_v5_books')) || [];
-    let kids = JSON.parse(localStorage.getItem('lib_v5_kids')) || [];
+    // Caricamento Dati
+    let books = JSON.parse(localStorage.getItem('lib_v6_books')) || [];
+    let kids = JSON.parse(localStorage.getItem('lib_v6_kids')) || [];
     let selectedBookId = null;
 
-    function sync() {
-        localStorage.setItem('lib_v5_books', JSON.stringify(books));
-        localStorage.setItem('lib_v5_kids', JSON.stringify(kids));
-        render();
-    }
-
-    function showTab(t) {
-        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    // Funzione Navigazione Indistruttibile
+    function showTab(tabId, btn) {
+        // Nascondi tutte le card
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        // Rimuovi active dai bottoni
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + t).classList.remove('hidden');
-        document.getElementById('n-' + t).classList.add('active');
+        
+        // Mostra quella selezionata
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        
+        // Chiudi eventuali ricerche aperte
+        closeSearch();
         render();
     }
 
-    // --- SISTEMA DI RICERCA PERSONALIZZATO ---
+    function sync() {
+        localStorage.setItem('lib_v6_books', JSON.stringify(books));
+        localStorage.setItem('lib_v6_kids', JSON.stringify(kids));
+        render();
+    }
+
+    // Ricerca Dinamica
     function filterSearch(type) {
         const input = document.getElementById('in-' + type);
         const resBox = document.getElementById('res-' + type);
-        const query = input.value.toLowerCase();
+        const query = input.value.toLowerCase().trim();
         
         if (query.length < 1) { resBox.style.display = 'none'; return; }
 
         let matches = [];
         if (type === 'kid') {
             matches = kids.filter(k => k.toLowerCase().includes(query)).sort();
+            resBox.innerHTML = matches.map(m => `<div class="search-item" onclick="selectMatch('kid', '${m.replace(/'/g, "\\'")}', '')">${m}</div>`).join('');
         } else {
             matches = books.filter(b => !b.out && b.title.toLowerCase().includes(query));
+            resBox.innerHTML = matches.map(m => `<div class="search-item" onclick="selectMatch('book', '${m.title.replace(/'/g, "\\'")}', '${m.id}')">${m.title}</div>`).join('');
         }
 
-        if (matches.length > 0) {
-            resBox.innerHTML = matches.map(m => {
-                const label = (type === 'kid') ? m : m.title;
-                const id = (type === 'kid') ? m : m.id;
-                return `<div class="search-item" onclick="selectMatch('${type}', '${label}', '${id}')">${label}</div>`;
-            }).join('');
-            resBox.style.display = 'block';
-        } else {
-            resBox.style.display = 'none';
-        }
+        resBox.style.display = matches.length > 0 ? 'block' : 'none';
     }
 
     function selectMatch(type, label, id) {
         document.getElementById('in-' + type).value = label;
-        document.getElementById('res-' + type).style.display = 'none';
         if (type === 'book') selectedBookId = id;
+        closeSearch();
     }
 
-    // --- FUNZIONI CORE ---
+    function closeSearch() {
+        document.querySelectorAll('.search-results').forEach(r => r.style.display = 'none');
+    }
+
     function toggleAddFields() {
         const type = document.getElementById('add-type').value;
-        document.getElementById('fields-book').classList.toggle('hidden', type !== 'book');
-        document.getElementById('fields-kid').classList.toggle('hidden', type !== 'kid');
+        document.getElementById('fields-book').style.display = (type === 'book') ? 'block' : 'none';
+        document.getElementById('fields-kid').style.display = (type === 'kid') ? 'block' : 'none';
     }
 
     function manualAdd() {
         const type = document.getElementById('add-type').value;
         if (type === 'book') {
             const t = document.getElementById('m-title').value.trim();
-            if (!t) return alert("Titolo mancante");
+            if (!t) return alert("Inserisci il titolo");
             books.push({ id: document.getElementById('m-id').value.trim() || "ID-"+Date.now(), title: t, author: document.getElementById('m-auth').value.trim() || "N.D.", out: false, kid: "", date: "" });
-            document.getElementById('m-id').value = ''; document.getElementById('m-title').value = ''; document.getElementById('m-auth').value = '';
+            document.getElementById('m-id').value = ''; document.getElementById('m-title').value = '';
         } else {
             const n = document.getElementById('m-kid-name').value.trim();
-            if (!n) return alert("Nome mancante");
+            if (!n) return alert("Inserisci il nome");
             if (!kids.includes(n)) kids.push(n);
             document.getElementById('m-kid-name').value = '';
         }
-        sync(); alert("Salvato!");
+        sync();
+        alert("Salvato correttamente!");
     }
 
     function execLoan() {
-        const kName = document.getElementById('in-kid').value;
-        if (!kids.includes(kName)) return alert("Seleziona un bambino esistente dalla lista!");
-        if (!selectedBookId) return alert("Seleziona un libro dalla lista suggerimenti!");
+        const kName = document.getElementById('in-kid').value.trim();
+        if (!kids.includes(kName)) return alert("Seleziona un bambino valido dai suggerimenti!");
+        if (!selectedBookId) return alert("Seleziona un libro dai suggerimenti!");
 
         const b = books.find(x => x.id === selectedBookId);
         if (b) {
@@ -210,7 +226,8 @@
             document.getElementById('in-kid').value = '';
             document.getElementById('in-book').value = '';
             selectedBookId = null;
-            sync(); alert("Prestito registrato!");
+            sync();
+            alert("Prestito registrato!");
         }
     }
 
@@ -219,18 +236,75 @@
         if (b) { b.out = false; b.kid = ""; b.date = ""; sync(); }
     }
 
-    function deleteKid(n) { if(confirm("Eliminare?")) { kids = kids.filter(k => k !== n); sync(); } }
+    function deleteKid(n) { if(confirm("Eliminare bambino?")) { kids = kids.filter(k => k !== n); sync(); } }
     function deleteBook(id) { if(confirm("Eliminare libro?")) { books = books.filter(b => b.id !== id); sync(); } }
 
     function exportToExcel() {
+        if (books.length === 0) return alert("Nessun dato da esportare");
         const ws = XLSX.utils.json_to_sheet(books);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Libri");
+        XLSX.utils.book_append_sheet(wb, ws, "Biblioteca");
         XLSX.writeFile(wb, "Backup_Biblioteca.xlsx");
     }
 
     function importFromExcel() {
         const file = document.getElementById('xl-input').files[0];
-        if (!file) return;
-        const reader
-    
+        if (!file) return alert("Seleziona un file prima");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            raw.forEach(r => {
+                const id = String(r.id || r.ID || r.ISBN || r.Barcode || Math.random());
+                if (!books.find(x => x.id === id)) {
+                    books.push({ id, title: r.title || r.Titolo || "Senza Titolo", author: r.author || r.Autore || "N.D.", out: !!r.out, kid: r.kid || "", date: r.date || "" });
+                }
+            });
+            sync();
+            alert("Dati importati con successo!");
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function render() {
+        document.getElementById('s-tot').innerText = books.length;
+        document.getElementById('s-pre').innerText = books.filter(x => x.out).length;
+        document.getElementById('s-kids').innerText = kids.length;
+
+        // Lista Resi
+        const resList = document.getElementById('list-res');
+        const outBooks = books.filter(x => x.out);
+        resList.innerHTML = outBooks.map(b => `
+            <div class="list-item">
+                <div class="info"><h4>${b.title}</h4><p>${b.kid} (${b.date})</p></div>
+                <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
+            </div>
+        `).join('') || '<p style="text-align:center; padding:20px; color:gray">Nessun libro fuori</p>';
+
+        // Catalogo
+        const q = document.getElementById('search-cat').value.toLowerCase();
+        document.getElementById('list-cat').innerHTML = books.filter(x => x.title.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)).map(b => `
+            <div class="list-item">
+                <div class="info"><h4>${b.title}</h4><p>${b.author}</p></div>
+                <span class="badge ${b.out?'bg-out':'bg-ok'}">${b.out?'FUORI':'LIBERO'}</span>
+            </div>
+        `).join('');
+
+        // Admin
+        document.getElementById('admin-kids-list').innerHTML = kids.sort().map(k => `
+            <div class="list-item"><span>${k}</span><button class="btn btn-sm btn-danger" onclick="deleteKid('${k.replace(/'/g, "\\'")}')">X</button></div>
+        `).join('');
+        
+        document.getElementById('admin-books-list').innerHTML = books.slice(-15).reverse().map(b => `
+            <div class="list-item"><span>${b.title}</span><button class="btn btn-sm btn-danger" onclick="deleteBook('${b.id}')">X</button></div>
+        `).join('');
+    }
+
+    function fullReset() { if(confirm("ATTENZIONE: Cancellerai tutto l'archivio. Procedere?")) { books=[]; kids=[]; sync(); } }
+
+    // Avvio
+    render();
+</script>
+</body>
+</html>
