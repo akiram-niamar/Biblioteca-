@@ -22,7 +22,7 @@
         .nav-btn { flex: 1; border: none; padding: 15px 5px; background: none; font-weight: bold; color: var(--gray); font-size: 0.7rem; border-bottom: 3px solid transparent; cursor: pointer; }
         .nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8faff; }
 
-        /* Componenti UI */
+        /* Card e Input */
         .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h3 { margin-bottom: 15px; font-size: 1rem; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 5px; color: #4a5568; }
@@ -40,9 +40,8 @@
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
         .info h4 { font-size: 0.9rem; color: #2d3748; }
         .info p { font-size: 0.75rem; color: var(--gray); }
-        .actions { display: flex; gap: 5px; }
         
-        .scroll-area { max-height: 250px; overflow-y: auto; margin-top: 10px; padding-right: 5px; }
+        .scroll-area { max-height: 250px; overflow-y: auto; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; padding: 5px; }
     </style>
 </head>
 <body>
@@ -67,69 +66,71 @@
 
     <div id="tab-pre" class="card">
         <h3>Nuovo Prestito</h3>
-        <label>👦 Seleziona Bambino</label>
-        <select id="sel-kid"></select>
-        <label>📖 Seleziona Libro Disponibile</label>
-        <select id="sel-book"></select>
-        <button class="btn" onclick="execLoan()">Registra Uscita</button>
+        <label>👦 Cerca/Digita Bambino</label>
+        <input type="text" id="input-kid" list="list-kids-search" placeholder="Inizia a scrivere il nome...">
+        <datalist id="list-kids-search"></datalist>
+
+        <label>📖 Cerca/Digita Libro Disponibile</label>
+        <input type="text" id="input-book" list="list-books-search" placeholder="Inizia a scrivere il titolo...">
+        <datalist id="list-books-search"></datalist>
+
+        <button class="btn" onclick="execLoan()">Registra Prestito</button>
     </div>
 
     <div id="tab-res" class="card hidden">
-        <h3>Libri da Rientrare</h3>
+        <h3>Libri in prestito</h3>
         <div id="list-res"></div>
     </div>
 
     <div id="tab-cat" class="card hidden">
-        <input type="text" id="search-cat" placeholder="🔍 Cerca libro o ID..." onkeyup="render()">
+        <input type="text" id="search-cat" placeholder="🔍 Cerca nel catalogo..." onkeyup="render()">
         <div id="list-cat"></div>
     </div>
 
     <div id="tab-adm" class="card hidden">
-        <h3>➕ Aggiungi Manualmente</h3>
+        <h3>➕ Aggiunta Manuale</h3>
         <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <label>Tipo Inserimento</label>
+            <label>Cosa vuoi aggiungere?</label>
             <select id="add-type" onchange="toggleAddFields()">
-                <option value="book">Nuovo Libro</option>
-                <option value="kid">Nuovo Bambino</option>
+                <option value="book">Libro</option>
+                <option value="kid">Bambino</option>
             </select>
             
             <div id="fields-book">
-                <input type="text" id="m-id" placeholder="ID / Codice a barre">
-                <input type="text" id="m-title" placeholder="Titolo">
+                <input type="text" id="m-id" placeholder="ID (ISBN o Barcode)">
+                <input type="text" id="m-title" placeholder="Titolo del libro">
                 <input type="text" id="m-auth" placeholder="Autore">
             </div>
-            
             <div id="fields-kid" class="hidden">
                 <input type="text" id="m-kid-name" placeholder="Nome e Cognome">
             </div>
-            
-            <button class="btn btn-success" onclick="manualAdd()">Salva nell'archivio</button>
+            <button class="btn btn-success" onclick="manualAdd()">Salva</button>
         </div>
 
         <h3>📁 Excel & Backup</h3>
-        <button class="btn btn-outline" onclick="exportToExcel()">Esporta Catalogo (Backup)</button>
-        <label style="margin-top:10px">Importa da "My Library" (.xlsx)</label>
+        <button class="btn btn-outline" onclick="exportToExcel()">Scarica Excel Catalogo (Backup)</button>
+        <label style="margin-top:10px">Aggiorna da "My Library" (.xlsx)</label>
         <input type="file" id="xl-input" accept=".xlsx, .xls">
-        <button class="btn" style="background:#4a5568" onclick="importFromExcel()">Carica e Unisci Libri</button>
+        <button class="btn" style="background:#4a5568" onclick="importFromExcel()">Importa e Unisci</button>
 
-        <h3 style="margin-top:20px">🗑️ Elimina Dati</h3>
-        <label>Elenco Bambini (Tocca per eliminare)</label>
+        <h3 style="margin-top:30px">🗑️ Elimina Elementi</h3>
+        <label>Bambini (Clicca "Elimina")</label>
         <div id="admin-kids-list" class="scroll-area"></div>
         
-        <label style="margin-top:15px">Elenco Libri (Tocca per eliminare)</label>
+        <label style="margin-top:15px">Libri (Clicca "Elimina")</label>
         <div id="admin-books-list" class="scroll-area"></div>
 
-        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">RESET TOTALE (Pulisce Tutto)</button>
+        <button class="btn btn-danger" style="margin-top:30px" onclick="fullReset()">CANCELLA TUTTO L'ARCHIVIO</button>
     </div>
 </div>
 
 <script>
-    let books = JSON.parse(localStorage.getItem('lib_v3_books')) || [];
-    let kids = JSON.parse(localStorage.getItem('lib_v3_kids')) || [];
+    let books = JSON.parse(localStorage.getItem('lib_v4_books')) || [];
+    let kids = JSON.parse(localStorage.getItem('lib_v4_kids')) || [];
 
     function sync() {
-        localStorage.setItem('lib_v3_books', JSON.stringify(books));
-        localStorage.setItem('lib_v3_kids', JSON.stringify(kids));
+        localStorage.setItem('lib_v4_books', JSON.stringify(books));
+        localStorage.setItem('lib_v4_kids', JSON.stringify(kids));
         render();
     }
 
@@ -147,147 +148,128 @@
         document.getElementById('fields-kid').classList.toggle('hidden', type !== 'kid');
     }
 
-    // AGGIUNTA MANUALE
     function manualAdd() {
         const type = document.getElementById('add-type').value;
         if (type === 'book') {
             const t = document.getElementById('m-title').value.trim();
-            if (!t) return alert("Titolo obbligatorio");
+            if (!t) return alert("Inserisci il titolo");
             books.push({
-                id: document.getElementById('m-id').value.trim() || "M-" + Date.now(),
-                title: t,
-                author: document.getElementById('m-auth').value.trim() || "N.D.",
+                id: document.getElementById('m-id').value.trim() || "ID-" + Date.now(),
+                title: t, author: document.getElementById('m-auth').value.trim() || "N.D.",
                 out: false, kid: "", date: ""
             });
             document.getElementById('m-id').value = ''; document.getElementById('m-title').value = ''; document.getElementById('m-auth').value = '';
         } else {
             const n = document.getElementById('m-kid-name').value.trim();
-            if (!n) return alert("Nome obbligatorio");
+            if (!n) return alert("Inserisci il nome");
             if (!kids.includes(n)) kids.push(n);
             document.getElementById('m-kid-name').value = '';
         }
         sync();
-        alert("Aggiunto con successo!");
+        alert("Aggiunto!");
     }
 
-    // ELIMINAZIONE MANUALE
     function deleteKid(name) {
-        if (confirm(`Eliminare ${name}?`)) {
-            kids = kids.filter(k => k !== name);
-            sync();
-        }
+        if (confirm(`Eliminare ${name}?`)) { kids = kids.filter(k => k !== name); sync(); }
     }
 
     function deleteBook(id) {
-        if (confirm(`Eliminare questo libro definitivamente?`)) {
-            books = books.filter(b => b.id !== id);
-            sync();
-        }
+        if (confirm(`Eliminare questo libro?`)) { books = books.filter(b => b.id !== id); sync(); }
     }
 
-    // PRESTITO E RESO
     function execLoan() {
-        const k = document.getElementById('sel-kid').value;
-        const bid = document.getElementById('sel-book').value;
-        if (!k || !bid) return alert("Seleziona sia il bambino che il libro");
-        const b = books.find(x => x.id === bid);
-        b.out = true; b.kid = k; b.date = new Date().toLocaleDateString('it-IT');
-        sync();
+        const kName = document.getElementById('input-kid').value;
+        const bInfo = document.getElementById('input-book').value;
+        
+        // Estraiamo l'ID dall'input del libro (che è salvato come "Titolo [ID]")
+        const bId = bInfo.split(" [ID: ")[1]?.replace("]", "");
+
+        if (!kids.includes(kName) || !bId) {
+            return alert("Attenzione: Seleziona un bambino e un libro validi dai suggerimenti!");
+        }
+
+        const b = books.find(x => x.id === bId);
+        if (b) {
+            b.out = true; b.kid = kName; b.date = new Date().toLocaleDateString('it-IT');
+            document.getElementById('input-kid').value = '';
+            document.getElementById('input-book').value = '';
+            sync();
+            alert("Prestito registrato correttamente!");
+        }
     }
 
     function execReturn(id) {
         const b = books.find(x => x.id === id);
-        b.out = false; b.kid = ""; b.date = "";
-        sync();
+        if (b) { b.out = false; b.kid = ""; b.date = ""; sync(); }
     }
 
-    // EXCEL: EXPORT
     function exportToExcel() {
-        if (books.length === 0) return alert("Nessun libro da esportare");
-        const worksheet = XLSX.utils.json_to_sheet(books);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Libri");
-        XLSX.writeFile(workbook, "Catalogo_Biblioteca.xlsx");
+        const ws = XLSX.utils.json_to_sheet(books);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, ws, "Biblioteca");
+        XLSX.writeFile(wb, "Backup_Biblioteca.xlsx");
     }
 
-    // EXCEL: IMPORT (MY LIBRARY COMPATIBLE)
     function importFromExcel() {
         const file = document.getElementById('xl-input').files[0];
-        if (!file) return alert("Scegli un file");
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, {type: 'array'});
             const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            let count = 0;
             raw.forEach(r => {
                 const id = String(r.ISBN || r.Barcode || r.ID || r.id || Math.random());
                 if (!books.find(x => x.id === id)) {
                     books.push({
-                        id: id,
-                        title: r.Titolo || r.Title || "Senza Titolo",
-                        author: r.Autore || r.Author || "N.D.",
-                        out: false, kid: "", date: ""
+                        id: id, title: r.Titolo || r.Title || "Senza Titolo",
+                        author: r.Autore || r.Author || "N.D.", out: false, kid: "", date: ""
                     });
-                    count++;
                 }
             });
-            sync();
-            alert(`Importazione completata! Aggiunti ${count} nuovi libri.`);
+            sync(); alert("Catalogo aggiornato!");
         };
         reader.readAsArrayBuffer(file);
     }
 
     function render() {
-        // Stats
         document.getElementById('s-tot').innerText = books.length;
         document.getElementById('s-pre').innerText = books.filter(x => x.out).length;
         document.getElementById('s-kids').innerText = kids.length;
 
-        // Dropdowns (Prestito)
-        const sKid = document.getElementById('sel-kid');
-        sKid.innerHTML = '<option value="">-- Chi prende il libro? --</option>' + kids.sort().map(k => `<option value="${k}">${k}</option>`).join('');
-        
-        const sBook = document.getElementById('sel-book');
-        const available = books.filter(x => !x.out).sort((a,b) => a.title.localeCompare(b.title));
-        sBook.innerHTML = '<option value="">-- Scegli il libro --</option>' + available.map(b => `<option value="${b.id}">${b.title}</option>`).join('');
+        // Suggerimenti Prestito (Datalist)
+        document.getElementById('list-kids-search').innerHTML = kids.sort().map(k => `<option value="${k}">`).join('');
+        const availBooks = books.filter(x => !x.out);
+        document.getElementById('list-books-search').innerHTML = availBooks.sort((a,b)=>a.title.localeCompare(b.title))
+            .map(b => `<option value="${b.title} [ID: ${b.id}]">`).join('');
 
-        // Lista Resi
+        // Liste Resi e Catalogo
         const resList = document.getElementById('list-res');
         resList.innerHTML = books.filter(x => x.out).map(b => `
             <div class="list-item">
-                <div class="info"><h4>${b.title}</h4><p>A: ${b.kid} (${b.date})</p></div>
+                <div class="info"><h4>${b.title}</h4><p>${b.kid} (${b.date})</p></div>
                 <button class="btn btn-sm btn-success" onclick="execReturn('${b.id}')">RESO</button>
             </div>
-        `).join('') || '<p style="text-align:center; padding:20px; color:#999">Tutti i libri sono in sede.</p>';
+        `).join('') || '<p style="text-align:center; padding:15px; color:gray">Nessun libro fuori</p>';
 
-        // Catalogo
         const q = document.getElementById('search-cat').value.toLowerCase();
         document.getElementById('list-cat').innerHTML = books.filter(x => x.title.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)).map(b => `
             <div class="list-item">
-                <div class="info"><h4>${b.title}</h4><p>${b.author} | ID: ${b.id}</p></div>
+                <div class="info"><h4>${b.title}</h4><p>${b.author}</p></div>
                 <span class="badge ${b.out?'bg-out':'bg-ok'}">${b.out?'Fuori':'Disponibile'}</span>
             </div>
         `).join('');
 
-        // Gestione Admin (Elenchi eliminazione)
+        // Admin Liste
         document.getElementById('admin-kids-list').innerHTML = kids.sort().map(k => `
-            <div class="list-item" style="padding: 5px 0">
-                <span style="font-size:0.85rem">${k}</span>
-                <button class="btn btn-sm btn-danger" onclick="deleteKid('${k}')">ELIMINA</button>
-            </div>
+            <div class="list-item"><span>${k}</span><button class="btn btn-sm btn-danger" onclick="deleteKid('${k}')">Elimina</button></div>
         `).join('');
-
-        document.getElementById('admin-books-list').innerHTML = books.slice(-20).reverse().map(b => `
-            <div class="list-item" style="padding: 5px 0">
-                <div class="info"><h4>${b.title}</h4></div>
-                <button class="btn btn-sm btn-danger" onclick="deleteBook('${b.id}')">ELIMINA</button>
-            </div>
-        `).join('') + (books.length > 20 ? '<p style="font-size:0.6rem; color:gray">Mostrati solo gli ultimi 20 per velocità...</p>' : '');
+        document.getElementById('admin-books-list').innerHTML = books.slice(-15).reverse().map(b => `
+            <div class="list-item"><span>${b.title}</span><button class="btn btn-sm btn-danger" onclick="deleteBook('${b.id}')">Elimina</button></div>
+        `).join('');
     }
 
-    function fullReset() { if(confirm("QUESTO CANCELLERÀ TUTTA LA BIBLIOTECA. Sei sicuro?")) { books = []; kids = []; sync(); } }
-
+    function fullReset() { if(confirm("CANCELLARE TUTTO?")) { books=[]; kids=[]; sync(); } }
     render();
 </script>
 </body>
